@@ -1,0 +1,128 @@
+with PHP :
+
+#include <WiFi.h>
+#include <HTTPClient.h>
+#include <ESP32Servo.h>
+
+// ---------- Konfigurasi WiFi ----------
+const char* ssid = "NAMA_WIFI_KAMU";            // Ganti dengan SSID WiFi kamu
+const char* password = "PASSWORD_WIFI_KAMU";    // Ganti dengan password WiFi kamu
+const char* serverURL = "http://192.168.1.100/gate/terima.php"; // Ganti dengan URL server kamu
+
+// ---------- Pin Hardware ----------
+const int trig1 = 18;
+const int echo1 = 19;
+const int trig2 = 21;
+const int echo2 = 22;
+
+const int led1 = 23;
+const int led2 = 5;
+const int servoPin = 17;
+
+const int servoAngle = 60;             // Posisi default
+const int thresholdDistance = 15;      // Jarak maksimal deteksi (cm)
+
+Servo myServo;
+bool isProcessing = false;
+
+void setup() {
+  Serial.begin(115200);
+
+  // Pin setup
+  pinMode(trig1, OUTPUT);
+  pinMode(echo1, INPUT);
+  pinMode(trig2, OUTPUT);
+  pinMode(echo2, INPUT);
+  pinMode(led1, OUTPUT);
+  pinMode(led2, OUTPUT);
+
+  myServo.attach(servoPin);
+  delay(200);
+  myServo.write(servoAngle); // posisi default (tertutup)
+
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
+
+  // Koneksi ke WiFi
+  WiFi.begin(ssid, password);
+  Serial.print("Menghubungkan ke WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nWiFi terkoneksi!");
+  Serial.print("IP ESP32: ");
+  Serial.println(WiFi.localIP());
+}
+
+long getDistance(int trigPin, int echoPin) {
+  digitalWrite(trigPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(trigPin, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(trigPin, LOW);
+
+  long duration = pulseIn(echoPin, HIGH, 30000);
+  long distance = duration * 0.034 / 2;
+  return distance;
+}
+
+void sendToServer(String status) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(serverURL);
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+
+    String postData = "status=" + status;
+    int httpResponseCode = http.POST(postData);
+
+    if (httpResponseCode > 0) {
+      Serial.print("Server response: ");
+      Serial.println(http.getString());
+    } else {
+      Serial.print("HTTP Error: ");
+      Serial.println(http.errorToString(httpResponseCode));
+    }
+
+    http.end();
+  } else {
+    Serial.println("WiFi tidak terhubung!");
+  }
+}
+
+void resetToDefault() {
+  digitalWrite(led1, LOW);
+  digitalWrite(led2, LOW);
+  myServo.write(servoAngle); // tutup gerbang
+  isProcessing = false;
+}
+
+void loop() {
+  if (!isProcessing) {
+    long distance1 = getDistance(trig1, echo1);
+    long distance2 = getDistance(trig2, echo2);
+
+    if (distance1 > 0 && distance1 <= thresholdDistance) {
+      isProcessing = true;
+      digitalWrite(led1, HIGH);
+      digitalWrite(led2, LOW);
+      myServo.write(servoAngle + 90);
+      Serial.println("Gate Masuk Terbuka");
+      sendToServer("masuk");
+      delay(3000);
+      resetToDefault();
+    } 
+    else if (distance2 > 0 && distance2 <= thresholdDistance) {
+      isProcessing = true;
+      digitalWrite(led1, LOW);
+      digitalWrite(led2, HIGH);
+      myServo.write(servoAngle + 90);
+      Serial.println("Gate Keluar Terbuka");
+      sendToServer("keluar");
+      delay(3000);
+      resetToDefault();
+    }
+  }
+
+  delay(100);
+}
