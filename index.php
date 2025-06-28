@@ -9,7 +9,7 @@ $data_total = mysqli_fetch_assoc($result_total);
 
 $total_masuk = $data_total['total_masuk'] ?? 0;
 $total_keluar = $data_total['total_keluar'] ?? 0;
-$status_gerbang_awal = $data_total['status_gerbang'] ?? 'Tidak diketahui'; // Status gerbang awal dari DB
+$status_gerbang_awal = $data_total['status_gerbang'] ?? 'tertutup'; // Default ke 'tertutup'
 
 // 2. Ambil 10 data log terakhir dari tabel `log_pergerakan`
 $query_log = "SELECT status, waktu FROM log_pergerakan ORDER BY id DESC LIMIT 10";
@@ -21,114 +21,119 @@ $result_log = mysqli_query($koneksi, $query_log);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitoring Gate Otomatis</title>
+    <title>Dashboard Monitoring Gerbang IoT</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Font Poppins dari Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js CDN untuk grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Icons from Lucide Icons (similar to Alibaba's simple icons) -->
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.js"></script>
 </head>
 <body>
 
-    <div class="container">
-        <header>
-            <h1>Dashboard Monitoring Gate Otomatis</h1>
-            <p>Data diperbarui secara otomatis. Status gerbang dan log aktivitas real-time.</p>
+    <div class="dashboard-container">
+        <header class="dashboard-header">
+            <h1 class="header-title">Monitoring Gerbang Otomatis</h1>
+            <p class="header-subtitle">Dashboard untuk memantau aktivitas dan mengontrol gerbang IoT.</p>
         </header>
 
-        <main>
-            <div class="summary-cards">
-                <div class="card card-masuk">
-                    <div class="card-icon">
-                        <!-- SVG untuk ikon masuk -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-box-arrow-in-right" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M6 3.5a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-2a.5.5 0 0 0-1 0v2A1.5 1.5 0 0 0 6.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 14.5 2h-8A1.5 1.5 0 0 0 5 3.5v2a.5.5 0 0 0 1 0v-2z"/>
-                            <path fill-rule="evenodd" d="M11.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5H1.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
-                        </svg>
+        <main class="dashboard-main">
+            <!-- Ringkasan Metrik -->
+            <section class="metric-cards-section">
+                <div class="metric-card card-masuk">
+                    <div class="card-icon-wrapper">
+                        <!-- Icon: log-in (sesuai lucide-icons) -->
+                        <i data-lucide="log-in" class="lucide-icon"></i>
                     </div>
                     <div class="card-content">
-                        <h2>Total Masuk</h2>
-                        <p class="count" id="totalMasukCount"><?php echo $total_masuk; ?></p>
+                        <span class="card-label">Total Masuk</span>
+                        <span class="card-value" id="totalMasukCount"><?php echo $total_masuk; ?></span>
                     </div>
                 </div>
-                <div class="card card-keluar">
-                    <div class="card-icon">
-                        <!-- SVG untuk ikon keluar -->
-                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" fill="currentColor" class="bi bi-box-arrow-right" viewBox="0 0 16 16">
-                            <path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0v2z"/>
-                            <path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3z"/>
-                        </svg>
+
+                <div class="metric-card card-keluar">
+                    <div class="card-icon-wrapper">
+                        <!-- Icon: log-out (sesuai lucide-icons) -->
+                        <i data-lucide="log-out" class="lucide-icon"></i>
                     </div>
                     <div class="card-content">
-                        <h2>Total Keluar</h2>
-                        <p class="count" id="totalKeluarCount"><?php echo $total_keluar; ?></p>
+                        <span class="card-label">Total Keluar</span>
+                        <span class="card-value" id="totalKeluarCount"><?php echo $total_keluar; ?></span>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="control-section">
-                <h2>Kontrol Gerbang</h2>
-                <div class="gate-status">
-                    Status Gerbang: <span id="gateStatus" class="<?php echo $status_gerbang_awal == 'terbuka' ? 'status-terbuka' : 'status-tertutup'; ?>"><?php echo htmlspecialchars(ucfirst($status_gerbang_awal)); ?></span>
+            <!-- Kontrol Gerbang -->
+            <section class="control-panel-section">
+                <h2 class="section-title">Kontrol Gerbang</h2>
+                <div class="gate-status-display">
+                    <span class="status-label">Status Gerbang:</span>
+                    <span class="status-badge <?php echo $status_gerbang_awal == 'terbuka' ? 'status-open' : 'status-closed'; ?>" id="gateStatus">
+                        <?php echo htmlspecialchars(ucfirst($status_gerbang_awal)); ?>
+                    </span>
                 </div>
-                <div class="control-buttons">
-                    <button id="openGateBtn" class="btn btn-open">Buka Gerbang</button>
-                    <button id="closeGateBtn" class="btn btn-close">Tutup Gerbang</button>
+                <div class="control-buttons-group">
+                    <button id="openGateBtn" class="btn btn-primary btn-open">Buka Gerbang</button>
+                    <button id="closeGateBtn" class="btn btn-danger btn-close">Tutup Gerbang</button>
                 </div>
-            </div>
+            </section>
 
-            <div class="chart-section">
-                <h2>Statistik Pergerakan Harian (7 Hari Terakhir)</h2>
+            <!-- Statistik Pergerakan Harian -->
+            <section class="chart-section">
+                <h2 class="section-title">Statistik Pergerakan Harian (7 Hari Terakhir)</h2>
                 <div class="chart-container">
                     <canvas id="pergerakanChart"></canvas>
                 </div>
-            </div>
+            </section>
 
-            <div class="log-section">
-                <h2>Log Aktivitas Terakhir</h2>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>Status</th>
-                            <th>Waktu</th>
-                        </tr>
-                    </thead>
-                    <tbody id="logTableBody">
-                        <?php
-                        if (mysqli_num_rows($result_log) > 0) {
-                            $nomor = 1;
-                            while ($row = mysqli_fetch_assoc($result_log)) {
-                                $status_class = $row['status'] == 'masuk' ? 'status-masuk' : 'status-keluar';
-                                echo "<tr>";
-                                echo "<td>" . $nomor++ . "</td>";
-                                echo "<td><span class='status " . $status_class . "'>" . htmlspecialchars(ucfirst($row['status'])) . "</span></td>";
-                                echo "<td>" . date('d F Y, H:i:s', strtotime($row['waktu'])) . "</td>";
-                                echo "</tr>";
+            <!-- Log Aktivitas Terakhir -->
+            <section class="log-section">
+                <h2 class="section-title">Log Aktivitas Terakhir</h2>
+                <div class="table-responsive">
+                    <table class="activity-log-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Status</th>
+                                <th>Waktu</th>
+                            </tr>
+                        </thead>
+                        <tbody id="logTableBody">
+                            <?php
+                            if (mysqli_num_rows($result_log) > 0) {
+                                $nomor = 1;
+                                while ($row = mysqli_fetch_assoc($result_log)) {
+                                    $status_class = $row['status'] == 'masuk' ? 'status-masuk-log' : 'status-keluar-log';
+                                    echo "<tr>";
+                                    echo "<td>" . $nomor++ . "</td>";
+                                    echo "<td><span class='log-status-badge " . $status_class . "'>" . htmlspecialchars(ucfirst($row['status'])) . "</span></td>";
+                                    echo "<td>" . date('d F Y, H:i:s', strtotime($row['waktu'])) . "</td>";
+                                    echo "</tr>";
+                                }
+                            } else {
+                                echo "<tr><td colspan='3'>Belum ada data aktivitas.</td></tr>";
                             }
-                        } else {
-                            echo "<tr><td colspan='3'>Belum ada data aktivitas.</td></tr>";
-                        }
-                        ?>
-                    </tbody>
-                </table>
-            </div>
+                            ?>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
         </main>
     </div>
 
     <script>
+        // Inisialisasi Lucide Icons
+        lucide.createIcons();
+
         // Variabel global untuk grafik
         let pergerakanChart;
 
         // Fungsi untuk mengambil dan memperbarui data total dan log
         async function updateDashboardData() {
             try {
-                // Ambil data total dan log dari index.php itu sendiri (karena sudah di-render)
-                // Sebenarnya lebih baik membuat endpoint API terpisah untuk ini juga,
-                // tapi untuk kesederhanaan PHP native, kita bisa parse dari HTML jika perlu,
-                // atau cukup mengandalkan pembaruan log aktivitas.
-                // Untuk demo ini, kita akan fokus pada update status gerbang dan grafik via AJAX.
-                
                 // Ambil data log terbaru
-                const logResponse = await fetch('get_latest_logs.php'); // Kita akan buat file ini juga!
+                const logResponse = await fetch('get_latest_logs.php');
                 const logData = await logResponse.json();
                 const logTableBody = document.getElementById('logTableBody');
                 logTableBody.innerHTML = ''; // Kosongkan tabel log
@@ -137,7 +142,7 @@ $result_log = mysqli_query($koneksi, $query_log);
                         const row = `
                             <tr>
                                 <td>${index + 1}</td>
-                                <td><span class="status status-${log.status}">${capitalizeFirstLetter(log.status)}</span></td>
+                                <td><span class="log-status-badge status-${log.status}-log">${capitalizeFirstLetter(log.status)}</span></td>
                                 <td>${formatDateTime(log.waktu)}</td>
                             </tr>
                         `;
@@ -148,7 +153,7 @@ $result_log = mysqli_query($koneksi, $query_log);
                 }
 
                 // Ambil dan perbarui total masuk/keluar
-                const totalResponse = await fetch('get_total_counts.php'); // Kita akan buat file ini juga!
+                const totalResponse = await fetch('get_total_counts.php');
                 const totalData = await totalResponse.json();
                 document.getElementById('totalMasukCount').textContent = totalData.total_masuk;
                 document.getElementById('totalKeluarCount').textContent = totalData.total_keluar;
@@ -159,8 +164,9 @@ $result_log = mysqli_query($koneksi, $query_log);
                 const gateStatusData = await gateStatusResponse.json();
                 const gateStatusElement = document.getElementById('gateStatus');
                 gateStatusElement.textContent = capitalizeFirstLetter(gateStatusData.status_gerbang);
-                gateStatusElement.className = ''; // Reset class
-                gateStatusElement.classList.add(gateStatusData.status_gerbang === 'terbuka' ? 'status-terbuka' : 'status-tertutup');
+                // Hapus semua kelas status sebelumnya dan tambahkan yang baru
+                gateStatusElement.classList.remove('status-open', 'status-closed');
+                gateStatusElement.classList.add(gateStatusData.status_gerbang === 'terbuka' ? 'status-open' : 'status-closed');
                 
                 // Perbarui grafik
                 updateChartData();
@@ -176,59 +182,56 @@ $result_log = mysqli_query($koneksi, $query_log);
                 const response = await fetch('get_chart_data.php');
                 const data = await response.json();
 
+                // Pastikan data yang diterima tidak null atau kosong
+                const labels = data.labels || [];
+                const masukData = data.masuk || [];
+                const keluarData = data.keluar || [];
+
                 if (pergerakanChart) {
-                    pergerakanChart.data.labels = data.labels;
-                    pergerakanChart.data.datasets[0].data = data.masuk;
-                    pergerakanChart.data.datasets[1].data = data.keluar;
+                    pergerakanChart.data.labels = labels;
+                    pergerakanChart.data.datasets[0].data = masukData;
+                    pergerakanChart.data.datasets[1].data = keluarData;
                     pergerakanChart.update();
                 } else {
                     // Inisialisasi grafik jika belum ada
                     const ctx = document.getElementById('pergerakanChart').getContext('2d');
                     pergerakanChart = new Chart(ctx, {
-                        type: 'bar', // Bisa juga 'line'
+                        type: 'bar', // Menggunakan bar chart untuk tampilan yang bersih
                         data: {
-                            labels: data.labels,
+                            labels: labels,
                             datasets: [
                                 {
                                     label: 'Jumlah Masuk',
-                                    data: data.masuk,
-                                    backgroundColor: 'rgba(75, 192, 192, 0.6)',
-                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    data: masukData,
+                                    backgroundColor: 'rgba(52, 152, 219, 0.7)', // Biru Alibaba
+                                    borderColor: 'rgba(52, 152, 219, 1)',
                                     borderWidth: 1,
-                                    borderRadius: 5
+                                    borderRadius: 4
                                 },
                                 {
                                     label: 'Jumlah Keluar',
-                                    data: data.keluar,
-                                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
-                                    borderColor: 'rgba(255, 99, 132, 1)',
+                                    data: keluarData,
+                                    backgroundColor: 'rgba(231, 76, 60, 0.7)', // Merah
+                                    borderColor: 'rgba(231, 76, 60, 1)',
                                     borderWidth: 1,
-                                    borderRadius: 5
+                                    borderRadius: 4
                                 }
                             ]
                         },
                         options: {
                             responsive: true,
                             maintainAspectRatio: false,
-                            scales: {
-                                y: {
-                                    beginAtZero: true,
-                                    title: {
-                                        display: true,
-                                        text: 'Jumlah Orang'
-                                    },
-                                    ticks: {
-                                        stepSize: 1 // Pastikan nilai Y adalah integer
+                            plugins: {
+                                legend: {
+                                    position: 'top',
+                                    labels: {
+                                        font: {
+                                            family: 'Poppins',
+                                            size: 14
+                                        },
+                                        color: '#555'
                                     }
                                 },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Tanggal'
-                                    }
-                                }
-                            },
-                            plugins: {
                                 tooltip: {
                                     callbacks: {
                                         label: function(context) {
@@ -239,6 +242,58 @@ $result_log = mysqli_query($koneksi, $query_log);
                                             label += context.raw + ' orang';
                                             return label;
                                         }
+                                    },
+                                    titleFont: {
+                                        family: 'Poppins'
+                                    },
+                                    bodyFont: {
+                                        family: 'Poppins'
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    title: {
+                                        display: true,
+                                        text: 'Jumlah Orang',
+                                        font: {
+                                            family: 'Poppins',
+                                            size: 14,
+                                            weight: 'bold'
+                                        },
+                                        color: '#333'
+                                    },
+                                    ticks: {
+                                        stepSize: 1,
+                                        font: {
+                                            family: 'Poppins'
+                                        },
+                                        color: '#666'
+                                    },
+                                    grid: {
+                                        color: 'rgba(238, 238, 238, 0.5)' // Garis grid vertikal lembut
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Tanggal',
+                                        font: {
+                                            family: 'Poppins',
+                                            size: 14,
+                                            weight: 'bold'
+                                        },
+                                        color: '#333'
+                                    },
+                                    ticks: {
+                                        font: {
+                                            family: 'Poppins'
+                                        },
+                                        color: '#666'
+                                    },
+                                    grid: {
+                                        display: false // Hilangkan garis grid horizontal
                                     }
                                 }
                             }

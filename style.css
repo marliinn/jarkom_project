@@ -1,304 +1,493 @@
 /* style.css */
 
+/* --- GENERAL STYLES --- */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
 body {
-    font-family: 'Inter', sans-serif; /* Menggunakan font Inter atau fallback sans-serif */
+    font-family: 'Poppins', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f4f7f6;
+    background-color: #f0f2f5; /* Light gray background */
     color: #333;
     display: flex;
     justify-content: center;
     align-items: flex-start;
     min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
-.container {
-    width: 90%;
+.dashboard-container {
+    width: 95%;
     max-width: 1200px;
-    margin: 20px auto;
+    margin: 30px auto;
     background-color: #ffffff;
-    padding: 30px;
+    padding: 30px 40px;
     border-radius: 12px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-}
-
-header {
-    text-align: center;
-    margin-bottom: 30px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid #eee;
-}
-
-header h1 {
-    color: #2c3e50;
-    font-size: 2.5em;
-    margin-bottom: 10px;
-}
-
-header p {
-    color: #7f8c8d;
-    font-size: 1.1em;
-}
-
-main {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08); /* More pronounced shadow */
+    border: 1px solid #e0e6ea; /* Subtle border */
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 35px; /* Spacing between main sections */
 }
 
-.summary-cards {
+/* --- HEADER --- */
+.dashboard-header {
+    text-align: center;
+    margin-bottom: 20px;
+    padding-bottom: 25px;
+    border-bottom: 1px solid #e9ecef; /* Lighter divider */
+}
+
+.dashboard-header .header-title {
+    font-size: 2.8em;
+    font-weight: 700;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+}
+
+.dashboard-header .header-subtitle {
+    font-size: 1.1em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+/* --- SECTION TITLES --- */
+.section-title {
+    font-size: 2em;
+    font-weight: 600;
+    color: #34495e;
+    text-align: center;
+    margin-bottom: 30px;
+    position: relative;
+    padding-bottom: 10px; /* Space for pseudo-element */
+}
+
+.section-title::after {
+    content: '';
+    display: block;
+    width: 70px;
+    height: 4px;
+    background-color: #007bff; /* Alibaba blue accent */
+    margin: 10px auto 0;
+    border-radius: 2px;
+    opacity: 0.8;
+}
+
+/* --- METRIC CARDS --- */
+.metric-cards-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); /* Responsive grid */
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+.metric-card {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
     display: flex;
-    justify-content: space-around;
+    align-items: center;
+    gap: 20px;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    border: 1px solid #f0f2f5;
+    position: relative; /* For border effects */
+    overflow: hidden; /* To clip border effect */
+}
+
+.metric-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 6px; /* Colored left border */
+    background-color: #ccc; /* Default color */
+    transition: background-color 0.3s ease;
+}
+
+.metric-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.card-masuk::before {
+    background-color: #28a745; /* Green for masuk */
+}
+.card-keluar::before {
+    background-color: #dc3545; /* Red for keluar */
+}
+
+.card-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: #e9f5ff; /* Light blue background for icon */
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.03);
+}
+
+.lucide-icon {
+    width: 32px;
+    height: 32px;
+    color: #007bff; /* Alibaba blue for icons */
+    stroke-width: 2.5; /* Make icons bolder */
+}
+.card-masuk .lucide-icon { color: #28a745; }
+.card-keluar .lucide-icon { color: #dc3545; }
+
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.card-label {
+    font-size: 1.2em;
+    color: #555;
+    font-weight: 500;
+    margin-bottom: 5px;
+}
+
+.card-value {
+    font-size: 3.2em;
+    font-weight: 700;
+    color: #343a40;
+    line-height: 1;
+}
+
+/* --- CONTROL PANEL --- */
+.control-panel-section {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e0e6ea;
+    text-align: center;
+}
+
+.gate-status-display {
+    margin-bottom: 25px;
+    font-size: 1.4em;
+    font-weight: 500;
+    color: #4a4a4a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.status-badge {
+    font-weight: 700;
+    padding: 8px 18px;
+    border-radius: 25px; /* Pill shape */
+    color: white;
+    display: inline-block;
+    min-width: 140px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+    transition: background-color 0.5s ease-in-out, box-shadow 0.5s ease-in-out;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-open {
+    background: linear-gradient(45deg, #28a745, #218838); /* Green gradient */
+    box-shadow: 0 0 20px rgba(40, 167, 69, 0.6);
+}
+
+.status-closed {
+    background: linear-gradient(45deg, #dc3545, #c82333); /* Red gradient */
+    box-shadow: 0 0 20px rgba(220, 53, 69, 0.6);
+}
+
+.control-buttons-group {
+    display: flex;
+    justify-content: center;
     gap: 20px;
     flex-wrap: wrap;
 }
 
-.card {
-    flex: 1;
-    min-width: 280px;
-    background-color: #ecf0f1;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    transition: transform 0.2s ease-in-out;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.card-icon svg {
-    color: #2980b9; /* Warna default icon */
-}
-
-.card-masuk .card-icon svg {
-    color: #27ae60; /* Hijau untuk masuk */
-}
-
-.card-keluar .card-icon svg {
-    color: #e74c3c; /* Merah untuk keluar */
-}
-
-.card-content h2 {
-    margin: 0;
-    font-size: 1.5em;
-    color: #555;
-}
-
-.card-content .count {
-    font-size: 2.8em;
-    font-weight: bold;
-    margin: 5px 0 0;
-    color: #34495e;
-}
-
-/* Control Section */
-.control-section {
-    background-color: #ecf0f1;
-    padding: 25px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    text-align: center;
-}
-
-.control-section h2 {
-    color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 20px;
-}
-
-.gate-status {
-    font-size: 1.3em;
-    margin-bottom: 20px;
-    font-weight: 500;
-}
-
-.gate-status #gateStatus {
-    font-weight: bold;
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: #fff;
-    display: inline-block;
-    min-width: 100px;
-}
-
-.gate-status .status-terbuka {
-    background-color: #27ae60; /* Green */
-}
-
-.gate-status .status-tertutup {
-    background-color: #e74c3c; /* Red */
-}
-
-.control-buttons {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    flex-wrap: wrap;
-}
-
 .btn {
-    padding: 12px 25px;
-    font-size: 1.1em;
-    font-weight: bold;
+    padding: 14px 30px;
+    font-size: 1.15em;
+    font-weight: 600;
     border: none;
     border-radius: 8px;
     cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.2s ease;
+    transition: all 0.3s ease;
     color: white;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    min-width: 180px;
 }
 
-.btn-open {
-    background: linear-gradient(145deg, #2ecc71, #27ae60); /* Green gradient */
+.btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
 }
 
-.btn-open:hover {
-    background: linear-gradient(145deg, #27ae60, #2ecc71);
-    transform: translateY(-2px);
+.btn-primary {
+    background: linear-gradient(45deg, #007bff, #0056b3); /* Alibaba blue gradient */
 }
 
-.btn-close {
-    background: linear-gradient(145deg, #e74c3c, #c0392b); /* Red gradient */
+.btn-primary:hover {
+    background: linear-gradient(45deg, #0056b3, #007bff);
 }
 
-.btn-close:hover {
-    background: linear-gradient(145deg, #c0392b, #e74c3c);
-    transform: translateY(-2px);
+.btn-danger {
+    background: linear-gradient(45deg, #dc3545, #c82333); /* Red gradient */
 }
 
+.btn-danger:hover {
+    background: linear-gradient(45deg, #c82333, #dc3545);
+}
 
-/* Chart Section */
+/* --- CHART SECTION --- */
 .chart-section {
     background-color: #ffffff;
-    padding: 25px;
+    padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-}
-
-.chart-section h2 {
-    color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 20px;
-    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e0e6ea;
 }
 
 .chart-container {
     position: relative;
-    height: 400px; /* Atur tinggi grafik */
+    height: 400px; /* Fixed height for consistency */
     width: 100%;
+    margin: 0 auto;
 }
 
-
-/* Log Section */
+/* --- LOG SECTION --- */
 .log-section {
     background-color: #ffffff;
-    padding: 25px;
+    padding: 30px;
     border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e0e6ea;
 }
 
-.log-section h2 {
-    color: #2c3e50;
-    margin-top: 0;
-    margin-bottom: 20px;
-    text-align: center;
+.table-responsive {
+    overflow-x: auto; /* Enable horizontal scroll for small screens */
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
 }
 
-table {
+.activity-log-table {
     width: 100%;
-    border-collapse: collapse;
+    border-collapse: separate;
+    border-spacing: 0;
     margin-top: 15px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-table th, table td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
+.activity-log-table thead {
+    background-color: #f8f9fa; /* Light header background */
+    color: #495057;
+    font-weight: 600;
+}
+
+.activity-log-table th,
+.activity-log-table td {
+    padding: 15px 20px;
     text-align: left;
+    border-bottom: 1px solid #eceeef; /* Lighter border */
 }
 
-table th {
-    background-color: #3498db;
-    color: white;
-    font-weight: bold;
-    text-transform: uppercase;
+.activity-log-table tbody tr:nth-child(even) {
+    background-color: #fefefe; /* Very subtle stripe */
 }
 
-table tbody tr:nth-child(even) {
-    background-color: #f2f2f2;
+.activity-log-table tbody tr:hover {
+    background-color: #eef7ff; /* Light blue on hover */
+    cursor: default;
 }
 
-table tbody tr:hover {
-    background-color: #e0f2f7;
-}
-
-.status {
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
+.log-status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-weight: 500;
     color: white;
     display: inline-block;
-    min-width: 70px;
+    min-width: 80px;
     text-align: center;
+    font-size: 0.9em;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
-.status-masuk {
+.status-masuk-log {
     background-color: #28a745; /* Green */
 }
 
-.status-keluar {
+.status-keluar-log {
     background-color: #dc3545; /* Red */
 }
 
-/* Responsif untuk layar kecil */
-@media (max-width: 768px) {
-    .container {
-        padding: 20px;
-        width: 95%;
+/* --- RESPONSIVENESS --- */
+@media (max-width: 992px) {
+    .dashboard-container {
+        width: 98%;
+        padding: 25px 30px;
+        gap: 30px;
     }
 
-    header h1 {
-        font-size: 2em;
+    .dashboard-header .header-title {
+        font-size: 2.2em;
     }
 
-    .summary-cards {
+    .section-title {
+        font-size: 1.8em;
+    }
+
+    .metric-card {
+        padding: 25px;
+    }
+
+    .card-value {
+        font-size: 2.8em;
+    }
+
+    .gate-status-display {
         flex-direction: column;
+        gap: 10px;
+    }
+
+    .status-badge {
+        font-size: 1.2em;
+        min-width: 120px;
+    }
+
+    .btn {
+        min-width: 160px;
+        font-size: 1.05em;
+        padding: 12px 25px;
+    }
+
+    .chart-container {
+        height: 350px;
+    }
+
+    .activity-log-table th,
+    .activity-log-table td {
+        padding: 12px 15px;
+        font-size: 0.95em;
+    }
+}
+
+@media (max-width: 768px) {
+    .dashboard-container {
+        margin: 15px auto;
+        padding: 20px;
+        gap: 25px;
+    }
+
+    .dashboard-header .header-title {
+        font-size: 1.8em;
+    }
+    .dashboard-header .header-subtitle {
+        font-size: 0.95em;
+    }
+
+    .section-title {
+        font-size: 1.6em;
+        margin-bottom: 25px;
+    }
+    .section-title::after {
+        width: 50px;
+    }
+
+    .metric-cards-section {
+        grid-template-columns: 1fr; /* Stack cards vertically */
+    }
+
+    .metric-card {
+        flex-direction: row; /* Keep content in row */
+        justify-content: center;
+        text-align: center;
+    }
+    .metric-card .card-content {
         align-items: center;
     }
 
-    .card {
-        width: 100%;
-        min-width: unset;
+    .card-icon-wrapper {
+        width: 50px;
+        height: 50px;
+    }
+    .lucide-icon {
+        width: 28px;
+        height: 28px;
     }
 
-    .control-buttons {
+    .card-label {
+        font-size: 1.1em;
+    }
+    .card-value {
+        font-size: 2.8em;
+    }
+
+    .gate-status-display {
+        font-size: 1.2em;
+    }
+
+    .control-buttons-group {
         flex-direction: column;
+        gap: 15px;
     }
 
     .btn {
         width: 100%;
+        min-width: unset;
+        font-size: 1em;
+        padding: 12px 20px;
+    }
+
+    .chart-container {
+        height: 280px; /* Adjust chart height for mobile */
+    }
+
+    .activity-log-table th:first-child,
+    .activity-log-table td:first-child {
+        display: none; /* Hide "No" column on small screens */
+    }
+    .activity-log-table th,
+    .activity-log-table td {
+        padding: 10px 12px;
+        font-size: 0.85em;
     }
 }
 
 @media (max-width: 480px) {
-    header h1 {
-        font-size: 1.8em;
+    .dashboard-container {
+        padding: 15px;
     }
-
-    .card-content h2 {
-        font-size: 1.3em;
+    .dashboard-header .header-title {
+        font-size: 1.5em;
     }
-
-    .card-content .count {
-        font-size: 2.2em;
+    .dashboard-header .header-subtitle {
+        font-size: 0.85em;
     }
-
-    table th, table td {
-        padding: 8px 10px;
-        font-size: 0.9em;
+    .section-title {
+        font-size: 1.4em;
+        margin-bottom: 20px;
+    }
+    .card-value {
+        font-size: 2.5em;
+    }
+    .gate-status-display {
+        font-size: 1em;
+    }
+    .status-badge {
+        min-width: 100px;
+        font-size: 1.1em;
+        padding: 6px 15px;
+    }
+    .btn {
+        padding: 10px 15px;
     }
 }
