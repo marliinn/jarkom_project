@@ -1,10 +1,28 @@
 <?php
+// index.php
+
+// Aktifkan pelaporan error PHP untuk debugging
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 // Sertakan file koneksi database
 include 'koneksi.php';
+
+// Pastikan koneksi database berhasil sebelum melanjutkan
+if (!$koneksi) {
+    die("<h1>Koneksi database gagal!</h1><p>Pastikan file koneksi.php sudah benar dan server database berjalan.</p><p>Error: " . mysqli_connect_error() . "</p>");
+}
 
 // 1. Ambil data total dari tabel `total_data`
 $query_total = "SELECT total_masuk, total_keluar, status_gerbang FROM total_data WHERE id = 1";
 $result_total = mysqli_query($koneksi, $query_total);
+
+// Tambahkan pengecekan jika query gagal
+if (!$result_total) {
+    die("<h1>Error Query Data Total!</h1><p>Terjadi kesalahan saat mengambil data dari tabel 'total_data'.</p><p>Error: " . mysqli_error($koneksi) . "</p>");
+}
+
 $data_total = mysqli_fetch_assoc($result_total);
 
 $total_masuk = $data_total['total_masuk'] ?? 0;
@@ -14,6 +32,11 @@ $status_gerbang_awal = $data_total['status_gerbang'] ?? 'tertutup'; // Default k
 // 2. Ambil 10 data log terakhir dari tabel `log_pergerakan`
 $query_log = "SELECT status, waktu FROM log_pergerakan ORDER BY id DESC LIMIT 10";
 $result_log = mysqli_query($koneksi, $query_log);
+
+// Tambahkan pengecekan jika query gagal
+if (!$result_log) {
+    die("<h1>Error Query Log Pergerakan!</h1><p>Terjadi kesalahan saat mengambil data dari tabel 'log_pergerakan'.</p><p>Error: " . mysqli_error($koneksi) . "</p>");
+}
 
 ?>
 <!DOCTYPE html>
@@ -27,8 +50,7 @@ $result_log = mysqli_query($koneksi, $query_log);
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Chart.js CDN untuk grafik -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Icons from Lucide Icons (similar to Alibaba's simple icons) -->
-    <script src="https://unpkg.com/lucide@latest/dist/lucide.js"></script>
+    <!-- OLD LOCATION for Lucide Icons Script was here -->
 </head>
 <body>
 
@@ -73,11 +95,11 @@ $result_log = mysqli_query($koneksi, $query_log);
                         <?php echo htmlspecialchars(ucfirst($status_gerbang_awal)); ?>
                     </span>
                 </div>
-                <div class="control-buttons-group">
+                <!-- <div class="control-buttons-group">
                     <button id="openGateBtn" class="btn btn-primary btn-open">Buka Gerbang</button>
                     <button id="closeGateBtn" class="btn btn-danger btn-close">Tutup Gerbang</button>
                 </div>
-            </section>
+            </section> -->
 
             <!-- Statistik Pergerakan Harian -->
             <section class="chart-section">
@@ -122,9 +144,25 @@ $result_log = mysqli_query($koneksi, $query_log);
         </main>
     </div>
 
+    <!-- NEW LOCATION AND DEFER ATTRIBUTE FOR LUCIDE ICONS SCRIPT, PLUS ONLOAD HANDLER -->
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.js" defer onload="onLucideLoaded()"></script>
+
     <script>
-        // Inisialisasi Lucide Icons
-        lucide.createIcons();
+        // --- TAMBAHKAN LOG INI DI AWAL SKRIP UNTUK MEMASTIKAN EKSEKUSI ---
+        console.log('Skrip dashboard mulai dimuat dan dieksekusi...');
+        // --- AKHIR LOG DEBUGGING AWAL ---
+
+        // Fungsi yang akan dipanggil saat skrip Lucide Icons selesai dimuat
+        function onLucideLoaded() {
+            console.log('Lucide Icons script loaded and ready. Initializing icons...');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+                console.log('Lucide icons created.');
+            } else {
+                console.warn('Lucide object not found or createIcons method missing AFTER LOAD. Icons may not render.');
+            }
+        }
+
 
         // Variabel global untuk grafik
         let pergerakanChart;
@@ -179,22 +217,73 @@ $result_log = mysqli_query($koneksi, $query_log);
         // Fungsi untuk memperbarui grafik
         async function updateChartData() {
             try {
+                console.log('Mencoba fetch data grafik dari get_chart_data.php...');
                 const response = await fetch('get_chart_data.php');
+                
+                console.log('Response dari fetch:', response);
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Network response was not ok:', response.status, response.statusText, errorText);
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
                 const data = await response.json();
+                console.log('Data JSON yang diterima:', data);
 
                 // Pastikan data yang diterima tidak null atau kosong
                 const labels = data.labels || [];
                 const masukData = data.masuk || [];
                 const keluarData = data.keluar || [];
 
+                // --- Penanganan jika data kosong atau tidak valid ---
+                if (labels.length === 0 || (masukData.length === 0 && keluarData.length === 0)) {
+                    console.warn('Data grafik kosong atau tidak lengkap. Grafik mungkin tidak akan ditampilkan.');
+                    // Opsional: Tampilkan pesan di UI bahwa tidak ada data grafik
+                    const chartContainer = document.querySelector('.chart-container');
+                    if (chartContainer) {
+                        chartContainer.innerHTML = '<p class="no-chart-data-message">Tidak ada data untuk menampilkan grafik.</p>';
+                        chartContainer.style.display = 'flex';
+                        chartContainer.style.justifyContent = 'center';
+                        chartContainer.style.alignItems = 'center';
+                        chartContainer.style.height = '400px'; // Pertahankan tinggi
+                    }
+                    if (pergerakanChart) {
+                        pergerakanChart.destroy(); // Hancurkan grafik lama jika ada
+                        pergerakanChart = null;
+                    }
+                    return; // Hentikan eksekusi jika data tidak ada
+                } else {
+                     // Hapus pesan jika ada data
+                    const noDataMessage = document.querySelector('.no-chart-data-message');
+                    if (noDataMessage) {
+                        noDataMessage.remove();
+                        // Pastikan canvas ada lagi
+                        const chartContainer = document.querySelector('.chart-container');
+                        if (!chartContainer.querySelector('canvas')) {
+                            const newCanvas = document.createElement('canvas');
+                            newCanvas.id = 'pergerakanChart';
+                            chartContainer.appendChild(newCanvas);
+                            chartContainer.style.display = 'block'; // Kembalikan display
+                        }
+                    }
+                }
+                // --- Akhir penanganan data kosong ---
+
+
                 if (pergerakanChart) {
                     pergerakanChart.data.labels = labels;
                     pergerakanChart.data.datasets[0].data = masukData;
                     pergerakanChart.data.datasets[1].data = keluarData;
                     pergerakanChart.update();
+                    console.log('Grafik diperbarui.');
                 } else {
                     // Inisialisasi grafik jika belum ada
                     const ctx = document.getElementById('pergerakanChart').getContext('2d');
+                    if (!ctx) {
+                        console.error("Canvas context tidak ditemukan. Pastikan elemen canvas dengan id 'pergerakanChart' ada.");
+                        return;
+                    }
                     pergerakanChart = new Chart(ctx, {
                         type: 'bar', // Menggunakan bar chart untuk tampilan yang bersih
                         data: {
@@ -299,34 +388,22 @@ $result_log = mysqli_query($koneksi, $query_log);
                             }
                         }
                     });
+                    console.log('Grafik baru diinisialisasi.');
                 }
             } catch (error) {
-                console.error('Error fetching chart data:', error);
-            }
-        }
-
-        // Fungsi untuk mengirim perintah kontrol gerbang
-        async function sendGateCommand(action) {
-            const formData = new FormData();
-            formData.append('action', action);
-
-            try {
-                const response = await fetch('kontrol_gerbang.php', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('Sukses: ' + result.message);
-                    // Setelah perintah dikirim, perbarui status dan data dashboard
-                    updateDashboardData(); 
-                } else {
-                    alert('Error: ' + result.message);
+                console.error('Error saat memperbarui atau menginisialisasi grafik:', error);
+                const chartContainer = document.querySelector('.chart-container');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<p class="no-chart-data-message error-message">Gagal memuat grafik. Periksa koneksi atau data.</p>';
+                    chartContainer.style.display = 'flex';
+                    chartContainer.style.justifyContent = 'center';
+                    chartContainer.style.alignItems = 'center';
+                    chartContainer.style.height = '400px';
                 }
-            } catch (error) {
-                console.error('Error sending gate command:', error);
-                alert('Terjadi kesalahan saat mengirim perintah. Pastikan ESP32 aktif dan IP benar.');
+                if (pergerakanChart) {
+                    pergerakanChart.destroy();
+                    pergerakanChart = null;
+                }
             }
         }
 
@@ -349,6 +426,11 @@ $result_log = mysqli_query($koneksi, $query_log);
 
         // Panggil fungsi pertama kali saat halaman dimuat
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOMContentLoaded event fired.'); // Log ini juga
+            // Lucide icons script is now loaded with 'defer' attribute and onload handler.
+            // onLucideLoaded() will be called automatically when lucide.js is ready.
+            // So, no direct call to lucide.createIcons() here anymore.
+
             updateDashboardData();
             // Atur interval untuk memperbarui data setiap 5 detik
             setInterval(updateDashboardData, 5000); 
