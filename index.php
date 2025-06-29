@@ -95,11 +95,11 @@ if (!$result_log) {
                         <?php echo htmlspecialchars(ucfirst($status_gerbang_awal)); ?>
                     </span>
                 </div>
-                <!-- <div class="control-buttons-group">
+                <div class="control-buttons-group">
                     <button id="openGateBtn" class="btn btn-primary btn-open">Buka Gerbang</button>
                     <button id="closeGateBtn" class="btn btn-danger btn-close">Tutup Gerbang</button>
                 </div>
-            </section> -->
+            </section>
 
             <!-- Statistik Pergerakan Harian -->
             <section class="chart-section">
@@ -145,27 +145,43 @@ if (!$result_log) {
     </div>
 
     <!-- NEW LOCATION AND DEFER ATTRIBUTE FOR LUCIDE ICONS SCRIPT, PLUS ONLOAD HANDLER -->
-    <script src="https://unpkg.com/lucide@latest/dist/lucide.js" defer onload="onLucideLoaded()"></script>
+    <!-- Removed defer and onload from here, as the main script will wait for window.onload -->
+    <script src="https://unpkg.com/lucide@latest/dist/lucide.js"></script>
 
     <script>
         // --- TAMBAHKAN LOG INI DI AWAL SKRIP UNTUK MEMASTIKAN EKSEKUSI ---
         console.log('Skrip dashboard mulai dimuat dan dieksekusi...');
         // --- AKHIR LOG DEBUGGING AWAL ---
 
-        // Fungsi yang akan dipanggil saat skrip Lucide Icons selesai dimuat
-        function onLucideLoaded() {
-            console.log('Lucide Icons script loaded and ready. Initializing icons...');
-            if (typeof lucide !== 'undefined' && lucide.createIcons) {
-                lucide.createIcons();
-                console.log('Lucide icons created.');
-            } else {
-                console.warn('Lucide object not found or createIcons method missing AFTER LOAD. Icons may not render.');
-            }
-        }
-
-
         // Variabel global untuk grafik
         let pergerakanChart;
+
+        // --- DEFINISIKAN sendGateCommand DI SINI (SEBELUM EVENT LISTENERS) ---
+        // Fungsi untuk mengirim perintah kontrol gerbang
+        async function sendGateCommand(action) {
+            const formData = new FormData();
+            formData.append('action', action);
+
+            try {
+                const response = await fetch('kontrol_gerbang.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Sukses: ' + result.message);
+                    // Setelah perintah dikirim, perbarui status dan data dashboard
+                    updateDashboardData(); 
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error sending gate command:', error);
+                alert('Terjadi kesalahan saat mengirim perintah. Pastikan ESP32 aktif dan IP benar.');
+            }
+        }
+        // --- AKHIR DEFINISI sendGateCommand ---
 
         // Fungsi untuk mengambil dan memperbarui data total dan log
         async function updateDashboardData() {
@@ -407,11 +423,11 @@ if (!$result_log) {
             }
         }
 
-        // Event listener untuk tombol Buka Gerbang
-        document.getElementById('openGateBtn').addEventListener('click', () => sendGateCommand('buka'));
+        // --- Event listener untuk tombol Buka Gerbang (dipindahkan ke dalam DOMContentLoaded) ---
+        // document.getElementById('openGateBtn').addEventListener('click', () => sendGateCommand('buka'));
 
-        // Event listener untuk tombol Tutup Gerbang
-        document.getElementById('closeGateBtn').addEventListener('click', () => sendGateCommand('tutup'));
+        // --- Event listener untuk tombol Tutup Gerbang (dipindahkan ke dalam DOMContentLoaded) ---
+        // document.getElementById('closeGateBtn').addEventListener('click', () => sendGateCommand('tutup'));
 
         // Fungsi helper untuk kapitalisasi huruf pertama
         function capitalizeFirstLetter(string) {
@@ -427,14 +443,41 @@ if (!$result_log) {
         // Panggil fungsi pertama kali saat halaman dimuat
         document.addEventListener('DOMContentLoaded', () => {
             console.log('DOMContentLoaded event fired.'); // Log ini juga
-            // Lucide icons script is now loaded with 'defer' attribute and onload handler.
-            // onLucideLoaded() will be called automatically when lucide.js is ready.
-            // So, no direct call to lucide.createIcons() here anymore.
-
+            // Panggil updateDashboardData() segera setelah DOM siap
             updateDashboardData();
+            
             // Atur interval untuk memperbarui data setiap 5 detik
             setInterval(updateDashboardData, 5000); 
+
+            // --- PASTIKAN sendGateCommand SUDAH TERDEFINISI SEBELUM MENAMBAHKAN LISTENER ---
+            // Event listener untuk tombol Buka Gerbang
+            if (document.getElementById('openGateBtn')) {
+                document.getElementById('openGateBtn').addEventListener('click', () => sendGateCommand('buka'));
+                console.log('Event listener untuk Buka Gerbang ditambahkan.');
+            } else {
+                console.warn('Tombol Buka Gerbang tidak ditemukan.');
+            }
+
+            // Event listener untuk tombol Tutup Gerbang
+            if (document.getElementById('closeGateBtn')) {
+                document.getElementById('closeGateBtn').addEventListener('click', () => sendGateCommand('tutup'));
+                console.log('Event listener untuk Tutup Gerbang ditambahkan.');
+            } else {
+                console.warn('Tombol Tutup Gerbang tidak ditemukan.');
+            }
+            // --- AKHIR PENAMBAHAN LISTENER DALAM DOMContentLoaded ---
         });
+
+        // Panggil lucide.createIcons() setelah SEMUA aset (termasuk skrip eksternal) dimuat
+        window.onload = function() {
+            console.log('window.onload event fired. Trying to create Lucide icons...');
+            if (typeof lucide !== 'undefined' && lucide.createIcons) {
+                lucide.createIcons();
+                console.log('Lucide icons created successfully on window.onload.');
+            } else {
+                console.warn('Lucide object still not found or createIcons method missing on window.onload. Icons may not render.');
+            }
+        };
 
     </script>
 
